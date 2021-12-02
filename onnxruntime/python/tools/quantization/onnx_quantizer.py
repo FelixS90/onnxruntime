@@ -534,7 +534,7 @@ class ONNXQuantizer:
                 return None
             # dynamic mode
             # Scale and Zero Points not available for this input. Add nodes to dynamically compute it
-            if self.fuse_dynamic_quant and qType == onnx_proto.TensorProto.UINT8:
+            if self.fuse_dynamic_quant: # and qType == onnx_proto.TensorProto.UINT8:
                 scale_name = input_name + "_scale"
                 zp_name = input_name + "_zero_point"
                 qlinear_node = onnx.helper.make_node("DynamicQuantizeLinear", [input_name],
