@@ -57,7 +57,7 @@ class TestOpAveragePool(unittest.TestCase):
         model.ir_version = 7 # use stable onnx ir version
         onnx.save(model, output_model_path)
 
-    def quantize_avgpool_test(self, model_fp32_path, data_reader, activation_type=QuantType.QUInt8):
+    def quantize_avgpool_test(self, model_fp32_path, data_reader, activation_type=QuantType.QUInt8, weight_type=QuantType.QUInt8):
         activation_proto_qtype = TensorProto.UINT8 if activation_type == QuantType.QUInt8 else TensorProto.INT8
         activation_type_str = 'uint8' if (activation_type == QuantType.QUInt8) else 'int8'
         model_q8_path = 'avgpool_{}.onnx'.format(activation_type_str)
@@ -65,7 +65,7 @@ class TestOpAveragePool(unittest.TestCase):
 
         # Verify QOperator mode
         data_reader.rewind()
-        quantize_static(model_fp32_path, model_q8_path, data_reader, activation_type = activation_type)
+        quantize_static(model_fp32_path, model_q8_path, data_reader, activation_type = activation_type, weight_type = weight_type)
         qnode_counts = {'QLinearConv': 1, 'QuantizeLinear': 1, 'DequantizeLinear': 2, 'QLinearAveragePool': 1}
         check_op_type_count(self, model_q8_path, **qnode_counts)
         qnode_io_qtypes = {'QuantizeLinear' : [['i', 2, activation_proto_qtype], ['o', 0, activation_proto_qtype]]}
@@ -77,7 +77,7 @@ class TestOpAveragePool(unittest.TestCase):
 
         # Verify QDQ mode
         data_reader.rewind()
-        quantize_static(model_fp32_path, model_q8_qdq_path, data_reader, quant_format=QuantFormat.QDQ, activation_type = activation_type)
+        quantize_static(model_fp32_path, model_q8_qdq_path, data_reader, quant_format=QuantFormat.QDQ, activation_type = activation_type, weight_type = weight_type)
         qdqnode_counts = {'Conv': 1, 'QuantizeLinear': 3, 'DequantizeLinear': 4, 'AveragePool': 1}
         check_op_type_count(self, model_q8_qdq_path, **qdqnode_counts)
         qnode_io_qtypes = {'QuantizeLinear' : [['i', 2, activation_proto_qtype], ['o', 0, activation_proto_qtype]]}
